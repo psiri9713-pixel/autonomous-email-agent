@@ -1,0 +1,32 @@
+[
+  {
+    "id": "E001",
+    "sender": "vendor@example.com",
+    "subject": "Invoice INV-1001 Submission",
+    "body": "Please find attached invoice INV-1001 for the services provided this month. The total amount is ₹25000."
+  },
+  {
+    "id": "E002",
+    "sender": "accounts@example.com",
+    "subject": "Payment Status for INV-1001",
+    "body": "Could you please tell me when invoice INV-1001 will be paid?"
+  },
+  {
+    "id": "E003",
+    "sender": "customer@example.com",
+    "subject": "Incorrect Amount in Invoice",
+    "body": "There is an incorrect amount in invoice INV-1002. Please check this issue and correct it."
+  },
+  {
+    "id": "E004",
+    "sender": "unknown@example.com",
+    "subject": "Congratulations! You Won",
+    "body": "Congratulations! You have won a huge cash prize. Click the link now to claim your reward."
+  },
+  {
+    "id": "E005",
+    "sender": "client@example.com",
+    "subject": "Problem with Recent Invoice",
+    "body": "Something seems wrong with my recent invoice. Please check it."
+  }
+]
