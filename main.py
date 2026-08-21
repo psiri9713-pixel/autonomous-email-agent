@@ -3,12 +3,12 @@ from email_classifier import classify_email
 from email_generator import generate_reply
 from email_memory import is_processed, mark_as_processed
 from email_sender import send_email
-
-
-MY_EMAIL = "psiri9713@gmail.com"
+from database import create_database, log_email
 
 
 def run_agent():
+
+    create_database()
 
     print("====================================")
     print("   AUTONOMOUS EMAIL AGENT")
@@ -24,13 +24,25 @@ def run_agent():
         print("From:", email["sender"])
         print("Subject:", email["subject"])
 
-        # Check duplicate
+        # Duplicate check
         if is_processed(email["id"]):
+
             print("Status: Already processed")
             print("Action: SKIPPED")
+
+            log_email(
+                email["id"],
+                email["sender"],
+                email["subject"],
+                "Already Processed",
+                "",
+                "Skipped",
+                "Already Processed"
+            )
+
             continue
 
-        # Classify email
+        # Classification
         category = classify_email(
             email["subject"],
             email["body"],
@@ -39,10 +51,23 @@ def run_agent():
 
         print("Category:", category)
 
-        # Ignore unwanted emails
+        # Ignore
         if category == "Ignore":
+
             print("Action: IGNORED")
+
             mark_as_processed(email["id"])
+
+            log_email(
+                email["id"],
+                email["sender"],
+                email["subject"],
+                category,
+                "",
+                "Ignored",
+                "Processed"
+            )
+
             continue
 
         # Generate reply
@@ -57,7 +82,7 @@ def run_agent():
         print("----------------")
         print(reply)
 
-        # Ask for approval
+        # Approval
         print("\nDo you want to send this reply?")
         choice = input("Enter y/n: ").strip().lower()
 
@@ -70,16 +95,48 @@ def run_agent():
             )
 
             if success:
+
                 print("Action: REPLY SENT")
+
                 mark_as_processed(email["id"])
+
+                log_email(
+                    email["id"],
+                    email["sender"],
+                    email["subject"],
+                    category,
+                    reply,
+                    "Sent",
+                    "Success"
+                )
+
             else:
+
                 print("Action: SEND FAILED")
-                print("Email was NOT marked as processed.")
+
+                log_email(
+                    email["id"],
+                    email["sender"],
+                    email["subject"],
+                    category,
+                    reply,
+                    "Send",
+                    "Failed"
+                )
 
         else:
 
             print("Action: REPLY NOT SENT")
-            print("Email was NOT marked as processed.")
+
+            log_email(
+                email["id"],
+                email["sender"],
+                email["subject"],
+                category,
+                reply,
+                "Rejected",
+                "Not Sent"
+            )
 
         print("====================================")
 
