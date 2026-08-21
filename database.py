@@ -1,121 +1,111 @@
 import sqlite3
+from datetime import datetime
 
-DATABASE_NAME = "email_agent.db"
-
-
-def get_connection():
-    return sqlite3.connect(DATABASE_NAME)
+DB_NAME = "email_agent.db"
 
 
-def initialize_database():
-    conn = get_connection()
-    cursor = conn.cursor()
+def create_database():
+    connection = sqlite3.connect(DB_NAME)
+    cursor = connection.cursor()
 
-    # Store incoming emails
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS emails (
+        CREATE TABLE IF NOT EXISTS email_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email_id TEXT UNIQUE,
             sender TEXT,
             subject TEXT,
-            body TEXT
-        )
-    """)
-
-    # Store AI classification and actions
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS actions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            email_id TEXT,
-            intent TEXT,
-            confidence REAL,
+            category TEXT,
+            reply TEXT,
             action TEXT,
-            reason TEXT,
-            status TEXT
+            status TEXT,
+            processed_at TEXT
         )
     """)
 
-    # Store follow-up/dispute tasks
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS tasks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            email_id TEXT,
-            task_type TEXT,
-            priority TEXT,
-            status TEXT
-        )
-    """)
-
-    conn.commit()
-    conn.close()
+    connection.commit()
+    connection.close()
 
 
-def save_email(email):
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        INSERT OR IGNORE INTO emails
-        (email_id, sender, subject, body)
-        VALUES (?, ?, ?, ?)
-    """, (
-        email["id"],
-        email["sender"],
-        email["subject"],
-        email["body"]
-    ))
-
-    conn.commit()
-    conn.close()
-
-
-def save_action(
+def log_email(
     email_id,
-    intent,
-    confidence,
+    sender,
+    subject,
+    category,
+    reply,
     action,
-    reason,
     status
 ):
-    conn = get_connection()
-    cursor = conn.cursor()
+    connection = sqlite3.connect(DB_NAME)
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute("""
+            INSERT INTO email_logs (
+                email_id,
+                sender,
+                subject,
+                category,
+                reply,
+                action,
+                status,
+                processed_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            email_id,
+            sender,
+            subject,
+            category,
+            reply,
+            action,
+            status,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        ))
+
+        connection.commit()
+
+    except sqlite3.IntegrityError:
+        pass
+
+    connection.close()
+
+
+def get_logs():
+    connection = sqlite3.connect(DB_NAME)
+    cursor = connection.cursor()
 
     cursor.execute("""
-        INSERT INTO actions
-        (email_id, intent, confidence, action, reason, status)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (
-        email_id,
-        intent,
-        confidence,
-        action,
-        reason,
-        status
-    ))
+        SELECT
+            sender,
+            subject,
+            category,
+            action,
+            status,
+            processed_at
+        FROM email_logs
+        ORDER BY id DESC
+    """)
 
-    conn.commit()
-    conn.close()
+    rows = cursor.fetchall()
+    connection.close()
+
+    columns = [
+        "sender",
+        "subject",
+        "category",
+        "action",
+        "status",
+        "processed_at"
+    ]
+
+    logs = []
+
+    for row in rows:
+        logs.append(dict(zip(columns, row)))
+
+    return logs
 
 
-def save_task(
-    email_id,
-    task_type,
-    priority,
-    status
-):
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        INSERT INTO tasks
-        (email_id, task_type, priority, status)
-        VALUES (?, ?, ?, ?)
-    """, (
-        email_id,
-        task_type,
-        priority,
-        status
-    ))
-
-    conn.commit()
-    conn.close()
+if __name__ == "__main__":
+    create_database()
+    print("Database created successfully.")
