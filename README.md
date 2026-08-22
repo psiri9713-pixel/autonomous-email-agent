@@ -87,3 +87,16 @@ autonomous-email-agent/
 │
 └── utils/
     └── prompts.py
+## Project Output
+
+### Dashboard
+![Dashboard](dashboard-output.png)
+
+### Email Classification
+![Email Classification](classification-output.png)
+
+### Reply / Action
+![Reply Action](reply-output.png)
+
+### Activity History
+![Activity History](history-output.png)
